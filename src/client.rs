@@ -42,7 +42,7 @@ impl Client {
         }
     }
 
-    pub async fn get(&mut self, key: String) -> crate::Result<()> {
+    pub async fn get(&mut self, key: String) -> crate::Result<Bytes> {
         let mut arr = vec![];
 
         arr.push(RESPType::Bulk(Bytes::from("get")));
@@ -50,11 +50,16 @@ impl Client {
 
         let frame = RESPType::Array(arr);
 
-        self.connection.write_frame(&frame).await
-        // get response
+        self.connection.write_frame(&frame).await?;
+
+        match self.read_response().await? {
+            RESPType::String(msg) => Ok(msg.into()),
+            RESPType::Bulk(msg) => Ok(msg),
+            err => Err(format!("unexpected resp data type: {:?}", err).into()),
+        }
     }
 
-    pub async fn set(&mut self, key: String, value: Bytes) -> crate::Result<()> {
+    pub async fn set(&mut self, key: String, value: Bytes) -> crate::Result<Bytes> {
         let mut arr = vec![];
 
         arr.push(RESPType::Bulk(Bytes::from("set")));
@@ -63,8 +68,13 @@ impl Client {
 
         let frame = RESPType::Array(arr);
 
-        self.connection.write_frame(&frame).await
-        // get response
+        self.connection.write_frame(&frame).await?;
+
+        match self.read_response().await? {
+            RESPType::String(msg) => Ok(msg.into()),
+            RESPType::Bulk(msg) => Ok(msg),
+            err => Err(format!("unexpected resp data type: {:?}", err).into()),
+        }
     }
 
     async fn read_response(&mut self) -> crate::Result<RESPType> {

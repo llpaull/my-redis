@@ -49,7 +49,14 @@ async fn main() {
             Ok(msg) => println!("{:?}", std::str::from_utf8(&msg[..]).unwrap()),
             Err(e) => eprintln!("{}", e),
         },
-        _ => todo!(),
+        Command::Get { key } => match client.get(key).await {
+            Ok(msg) => println!("{:?}", std::str::from_utf8(&msg[..]).unwrap()),
+            Err(e) => eprintln!("{}", e),
+        },
+        Command::Set { key, value } => match client.set(key, value).await {
+            Ok(msg) => println!("{:?}", std::str::from_utf8(&msg[..]).unwrap()),
+            Err(e) => eprintln!("{}", e),
+        },
     }
 }
 
